@@ -30,13 +30,13 @@
                 <h5 class="card-title">Detail Proyek</h5>
                 <div class="row">
                   <div class="col-lg-5 col-md-6 label text-muted">Deskripsi</div>
-                  <div class="col-lg-7 col-md-6"></div>
+                  <div class="col-lg-7 col-md-6">Projek berita mvc menggunakan ci4 dan tampilan antarmuka dari template NiceAdmin.</div>
                 </div>
-                <div class="row">
+                <div class="row mt-3">
                   <div class="col-lg-5 col-md-6 label text-muted">Aplikasi</div>
                   <div class="col-lg-7 col-md-6">Portal Berita MVC</div>
                 </div>
-                <div class="row mt-2">
+                <div class="row mt-3">
                   <div class="col-lg-5 col-md-6 label text-muted">Framework</div>
                   <div class="col-lg-7 col-md-6">CodeIgniter 4</div>
                 </div>
