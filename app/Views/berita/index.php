@@ -14,7 +14,7 @@
             <?php foreach($berita as $b): ?>
             <div class="col-md-4 mb-4">
                 <div class="card h-100">
-                    <img src="<?= base_url('uploads/' . $b['gambar']) ?>" class="card-img-top" alt="<?= htmlspecialchars($b['judul']) ?>" style="height: 200px; object-fit: cover;">
+                    <img src="<?= $b['gambar'] ?>" class="card-img-top" alt="<?= htmlspecialchars($b['judul']) ?>" style="height: 200px; object-fit: cover;">
                     <div class="card-body">
                         <h5 class="card-title"><?= htmlspecialchars($b['judul']) ?></h5>
                         <p class="card-text"><?= htmlspecialchars(substr($b['isi'], 0, 100)) ?>...</p>
@@ -26,7 +26,7 @@
             <?php endforeach; ?>
             <?php if(empty($berita)): ?>
             <div class="col-12">
-                <div class="alert alert-info">Belum ada berita. Silakan tambahkan berita melalui menu Upload Berita.</div>
+                <div class="alert alert-info">Belum ada berita.</div>
             </div>
             <?php endif; ?>
         </div>

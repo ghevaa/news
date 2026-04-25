@@ -8,12 +8,6 @@
         </a>
       </li>
       <li class="nav-item">
-        <a class="nav-link <?= uri_string() == 'upload' ? '' : 'collapsed' ?>" href="<?= base_url('/upload') ?>">
-          <i class="bi bi-upload"></i>
-          <span>Upload Berita</span>
-        </a>
-      </li>
-      <li class="nav-item">
         <a class="nav-link <?= uri_string() == 'profile' ? '' : 'collapsed' ?>" href="<?= base_url('/profile') ?>">
           <i class="bi bi-person"></i>
           <span>Profile Pembuat</span>

@@ -8,14 +8,14 @@ https://www.notion.so/april-ns/Codeigniter4-Layout-7543f79c76b1498080d4d1f7cdc29
 
 Arsitektur aplikasi ini menggunakan pola MVC (Model-View-Controller) dari framework **CodeIgniter 4**. Kode dipisahkan menjadi tiga peran utama agar lebih terstruktur, mudah dikelola, dan mudah dikembangkan.
 
-Proyek ini menyimpan data berita dalam **file JSON** (bukan database), menggunakan template **NiceAdmin** untuk tampilan, dan memiliki fitur: daftar berita, detail berita, upload berita, dan halaman profil.
+Proyek ini menyimpan data berita secara **statis (hardcoded)** untuk keperluan demonstrasi UI, menggunakan template **NiceAdmin** untuk tampilan, dan memiliki fitur: daftar berita, detail berita, dan halaman profil.
 
 ---
 
 ## 1. Model (M) — `app/Models/BeritaModel.php`
 
 **Deskripsi:**
-Model bertugas mengelola semua urusan **data**. Dalam proyek ini, `BeritaModel` membaca dan menulis data berita ke file JSON yang tersimpan di `writable/data/berita.json`. Model tidak tahu dan tidak peduli bagaimana data akan ditampilkan — ia murni hanya mengurus penyimpanan dan pengambilan data.
+Model bertugas mengelola semua urusan **data**. Dalam proyek ini, `BeritaModel` menyimpan data berita di dalam bentuk *array statis (hardcoded)* di dalam class. Model tidak tahu dan tidak peduli bagaimana data akan ditampilkan — ia murni hanya mengurus penyediaan data.
 
 **Kode Asli Proyek:**
 ```php
@@ -25,39 +25,41 @@ namespace App\Models;
 
 class BeritaModel
 {
-    private $dataFile;
-
-    public function __construct()
-    {
-        // Menentukan lokasi file JSON sebagai "database" penyimpanan berita
-        $this->dataFile = WRITEPATH . 'data/berita.json';
-    }
+    private $data = [
+        [
+            'id' => 1,
+            'judul' => 'Teknologi AI Semakin Berkembang Pesat di Tahun 2026',
+            'isi' => 'Kecerdasan buatan (AI) kini telah menjadi bagian tak terpisahkan dari kehidupan kita sehari-hari. Mulai dari asisten virtual, sistem rekomendasi, hingga mobil otonom. Di tahun 2026, perkembangannya bahkan lebih pesat.',
+            'gambar' => 'https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&q=80&w=800',
+            'created_at' => '2026-04-20 10:00:00'
+        ],
+        [
+            'id' => 2,
+            'judul' => 'Menjaga Kesehatan Mental di Era Digital',
+            'isi' => 'Di era yang serba digital dan serba cepat ini, menjaga kesehatan mental adalah hal yang krusial. Beberapa ahli merekomendasikan detoks digital secara berkala.',
+            'gambar' => 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&q=80&w=800',
+            'created_at' => '2026-04-22 14:30:00'
+        ],
+        [
+            'id' => 3,
+            'judul' => 'Eksplorasi Luar Angkasa: Misi Mars Terbaru',
+            'isi' => 'Badan antariksa dunia baru saja meluncurkan misi terbarunya ke planet merah. Misi ini diharapkan dapat menemukan tanda-tanda kehidupan mikroba di masa lampau.',
+            'gambar' => 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=800',
+            'created_at' => '2026-04-24 09:15:00'
+        ]
+    ];
 
     public function getBerita($id = false)
     {
-        // Jika file JSON belum ada, kembalikan array kosong
-        if (!file_exists($this->dataFile)) {
-            return [];
-        }
-
-        // Baca isi file JSON dan decode menjadi array PHP
-        $jsonBackup = file_get_contents($this->dataFile);
-        $data = json_decode($jsonBackup, true);
-
-        if ($data === null) {
-            $data = [];
-        }
-
         if ($id === false) {
-            // Jika tidak ada ID spesifik, ambil SEMUA berita dan urutkan dari terbaru
-            usort($data, function($a, $b) {
+            $sortedData = $this->data;
+            usort($sortedData, function($a, $b) {
                 return strtotime($b['created_at']) <=> strtotime($a['created_at']);
             });
-            return $data;
+            return $sortedData;
         }
 
-        // Jika ada ID, cari berita spesifik berdasarkan ID
-        foreach ($data as $item) {
+        foreach ($this->data as $item) {
             if ($item['id'] == $id) {
                 return $item;
             }
@@ -65,45 +67,21 @@ class BeritaModel
 
         return null;
     }
-
-    public function insert($newData)
-    {
-        // Baca data yang sudah ada (atau buat array kosong jika belum ada)
-        if (!file_exists($this->dataFile)) {
-            $data = [];
-        } else {
-            $json = file_get_contents($this->dataFile);
-            $data = json_decode($json, true);
-            if ($data === null) $data = [];
-        }
-
-        // Generate ID baru secara otomatis (ID tertinggi + 1)
-        $newId = empty($data) ? 1 : max(array_column($data, 'id')) + 1;
-        $newData['id'] = $newId;
-        $newData['created_at'] = date('Y-m-d H:i:s');
-
-        // Tambahkan data baru ke dalam array, lalu simpan kembali ke file JSON
-        $data[] = $newData;
-
-        return file_put_contents($this->dataFile, json_encode($data, JSON_PRETTY_PRINT));
-    }
 }
 ```
 
 **Alur dalam Model:**
 1. Model dipanggil oleh **Controller** (misal: `$this->beritaModel->getBerita()`).
-2. Method `getBerita()` membaca file `writable/data/berita.json` menggunakan `file_get_contents()`.
-3. Isi file JSON di-decode menjadi array PHP menggunakan `json_decode()`.
-4. Jika dipanggil tanpa parameter `$id`, semua data dikembalikan (diurutkan dari terbaru). Jika dipanggil dengan `$id`, hanya satu berita spesifik yang dikembalikan.
-5. Method `insert()` bekerja sebaliknya — menerima data baru, menambahkan ID dan timestamp, lalu menulis ulang file JSON.
-6. Hasil data dikembalikan ke **Controller** yang memanggilnya.
+2. Jika dipanggil tanpa parameter `$id`, method `getBerita()` akan mengambil seluruh isi array statis `$data`, mengurutkannya dari terbaru, lalu mengembalikannya.
+3. Jika dipanggil dengan `$id`, method akan mencari satu berita yang ID-nya cocok dalam array tersebut.
+4. Hasil data dikembalikan ke **Controller** yang memanggilnya.
 
 ---
 
 ## 2. View (V) — `app/Views/berita/index.php` & `app/Views/layout/template.php`
 
 **Deskripsi:**
-View bertugas menampilkan **antarmuka pengguna** (halaman web). Dalam proyek ini, View menggunakan sistem **Layout** dari CodeIgniter 4 — ada file `template.php` sebagai kerangka utama (berisi header, sidebar, footer dari NiceAdmin), dan file-file konten seperti `index.php`, `detail.php`, `upload.php` yang mengisi bagian tengah template tersebut. View hanya menampilkan data yang sudah dikirim oleh Controller.
+View bertugas menampilkan **antarmuka pengguna** (halaman web). Dalam proyek ini, View menggunakan sistem **Layout** dari CodeIgniter 4 — ada file `template.php` sebagai kerangka utama (berisi header, sidebar, footer dari NiceAdmin), dan file-file konten seperti `index.php` dan `detail.php` yang mengisi bagian tengah template tersebut. View hanya menampilkan data yang sudah dikirim oleh Controller.
 
 **Kode Asli Proyek — Layout Template (`app/Views/layout/template.php`):**
 ```php
@@ -161,7 +139,7 @@ View bertugas menampilkan **antarmuka pengguna** (halaman web). Dalam proyek ini
             <?php foreach($berita as $b): ?>  <!-- Looping data berita dari Controller -->
             <div class="col-md-4 mb-4">
                 <div class="card h-100">
-                    <img src="<?= base_url('uploads/' . $b['gambar']) ?>" class="card-img-top" 
+                    <img src="<?= $b['gambar'] ?>" class="card-img-top" 
                          alt="<?= htmlspecialchars($b['judul']) ?>" style="height: 200px; object-fit: cover;">
                     <div class="card-body">
                         <h5 class="card-title"><?= htmlspecialchars($b['judul']) ?></h5>
@@ -179,7 +157,7 @@ View bertugas menampilkan **antarmuka pengguna** (halaman web). Dalam proyek ini
 
             <?php if(empty($berita)): ?>
             <div class="col-12">
-                <div class="alert alert-info">Belum ada berita. Silakan tambahkan melalui menu Upload.</div>
+                <div class="alert alert-info">Belum ada berita.</div>
             </div>
             <?php endif; ?>
         </div>
@@ -200,7 +178,7 @@ View bertugas menampilkan **antarmuka pengguna** (halaman web). Dalam proyek ini
 ## 3. Controller (C) — `app/Controllers/Berita.php`
 
 **Deskripsi:**
-Controller adalah **otak pengatur alur** aplikasi. Ia menjadi penghubung antara permintaan pengguna (URL yang diakses), pengambilan data melalui Model, dan penampilan hasil melalui View. Dalam proyek ini, `Berita` Controller menangani semua halaman: daftar berita, detail, upload, dan profil.
+Controller adalah **otak pengatur alur** aplikasi. Ia menjadi penghubung antara permintaan pengguna (URL yang diakses), pengambilan data melalui Model, dan penampilan hasil melalui View. Dalam proyek ini, `Berita` Controller menangani halaman: daftar berita, detail, dan profil.
 
 **Kode Asli Proyek:**
 ```php
@@ -246,43 +224,7 @@ class Berita extends BaseController
         return view('berita/detail', $data);  // Kirim ke View detail
     }
 
-    // ===== METHOD 3: Halaman Form Upload (route: /upload) =====
-    public function upload()
-    {
-        $data = [
-            'title' => 'Upload Berita'
-        ];
-        return view('berita/upload', $data);  // Tampilkan form (tidak perlu data dari Model)
-    }
-
-    // ===== METHOD 4: Proses Upload Berita (route: POST /upload/process) =====
-    public function process_upload()
-    {
-        // Validasi input dari pengguna
-        if (!$this->validate([
-            'judul'  => 'required',
-            'isi'    => 'required',
-            'gambar' => 'uploaded[gambar]|max_size[gambar,2048]|is_image[gambar]'
-        ])) {
-            return redirect()->to('/upload')->withInput()->with('errors', $this->validator->getErrors());
-        }
-
-        // Proses file gambar
-        $fileGambar = $this->request->getFile('gambar');
-        $namaGambar = $fileGambar->getRandomName();
-        $fileGambar->move('uploads', $namaGambar);
-
-        // Kirim data ke Model untuk disimpan ke file JSON
-        $this->beritaModel->insert([
-            'judul'  => $this->request->getPost('judul'),
-            'isi'    => $this->request->getPost('isi'),
-            'gambar' => $namaGambar
-        ]);
-
-        return redirect()->to('/')->with('success', 'Berita berhasil diupload.');
-    }
-
-    // ===== METHOD 5: Halaman Profil (route: /profile) =====
+    // ===== METHOD 3: Halaman Profil (route: /profile) =====
     public function profile()
     {
         $data = [
@@ -296,9 +238,8 @@ class Berita extends BaseController
 **Alur dalam Controller:**
 1. Pengguna mengakses URL (misal: `localhost:8080/`). **Router** (di `app/Config/Routes.php`) mengarahkan permintaan ini ke method `Berita::index()`.
 2. Di dalam `__construct()`, Controller langsung membuat instance **Model** (`new BeritaModel()`) agar siap digunakan di semua method.
-3. Method `index()` meminta data ke **Model** melalui `$this->beritaModel->getBerita()` — Model membaca file JSON dan mengembalikan array data.
+3. Method `index()` meminta data ke **Model** melalui `$this->beritaModel->getBerita()` — Model mengembalikan array data statis.
 4. Controller menyiapkan array `$data` berisi judul halaman dan data berita, lalu melemparkannya ke **View** melalui `return view('berita/index', $data)`.
-5. Untuk proses upload (`process_upload()`), Controller melakukan **validasi** terlebih dahulu, lalu memproses file gambar, dan memerintahkan Model untuk menyimpan data baru via `$this->beritaModel->insert(...)`.
 
 ---
 
@@ -317,8 +258,6 @@ use CodeIgniter\Router\RouteCollection;
  */
 $routes->get('/', 'Berita::index');                    // Halaman utama → method index()
 $routes->get('/berita/(:num)', 'Berita::detail/$1');   // Detail berita → method detail($id)
-$routes->get('/upload', 'Berita::upload');              // Form upload → method upload()
-$routes->post('/upload/process', 'Berita::process_upload'); // Proses upload → method process_upload()
 $routes->get('/profile', 'Berita::profile');            // Halaman profil → method profile()
 ```
 
@@ -331,7 +270,7 @@ Berikut skenario lengkap saat pengguna membuka halaman utama (`localhost:8080/`)
 1. **Pengguna** mengetik `localhost:8080/` di browser.
 2. **Router** (`Routes.php`) mencocokkan URL `/` dan mengarahkannya ke `Berita::index()`.
 3. **Controller** (`Berita.php`) method `index()` dijalankan. Ia memanggil `$this->beritaModel->getBerita()`.
-4. **Model** (`BeritaModel.php`) membaca file `writable/data/berita.json`, men-decode JSON menjadi array PHP, mengurutkan dari terbaru, lalu mengembalikan hasilnya ke Controller.
+4. **Model** (`BeritaModel.php`) mengambil array data berita secara statis, mengurutkan dari terbaru, lalu mengembalikan hasilnya ke Controller.
 5. **Controller** menerima array data berita tersebut, membungkusnya dalam `$data`, dan memanggil `return view('berita/index', $data)`.
 6. **View** (`berita/index.php`) meng-extend `layout/template.php` (akan mendapat header, sidebar, footer NiceAdmin), lalu melakukan `foreach` pada variabel `$berita` untuk menampilkan setiap berita sebagai kartu (card).
 7. **Pengguna** melihat halaman web lengkap berisi daftar berita di browsernya.

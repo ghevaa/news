@@ -4,7 +4,7 @@
 <div class="row">
     <div class="col-lg-8 mx-auto">
         <div class="card mb-4">
-            <img src="<?= base_url('uploads/' . $berita['gambar']) ?>" class="card-img-top" alt="<?= htmlspecialchars($berita['judul']) ?>">
+            <img src="<?= $berita['gambar'] ?>" class="card-img-top" alt="<?= htmlspecialchars($berita['judul']) ?>">
             <div class="card-body">
                 <h2 class="card-title"><?= htmlspecialchars($berita['judul']) ?></h2>
                 <div class="text-muted mb-3">
